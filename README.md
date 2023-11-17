@@ -6,6 +6,8 @@
   <img src="https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=Node.js&logoColor=white">
   <img src="https://img.shields.io/badge/Express-000000?style=for-the-badge&logo=express&logoColor=white">
   <img src="https://img.shields.io/static/v1?style=for-the-badge&message=Prisma&color=2D3748&logo=Prisma&logoColor=FFFFFF&label=">
+  <img src="https://img.shields.io/badge/Supabase-181818?style=for-the-badge&logo=supabase&logoColor=white">
+  <img src="https://img.shields.io/badge/Next-black?style=for-the-badge&logo=next.js&logoColor=white">
 </p>
 
 ## Development Setup
@@ -28,6 +30,19 @@ $> npm install
 $> npm run start
 
 Express app started on port 8000
+```
+
+#### Prisma
+
+Create supabase account before [Supabase](https://supabase.com/partners/integrations/prisma)
+(Run after the `npm install`)
+
+```bash
+# in .env put your supabase adress like in .env.example
+
+# push the database
+$> npx prisma db push
+
 ```
 
 ### App
