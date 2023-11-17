@@ -1,0 +1,62 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model entity {
+  EntityId Int @id @default(autoincrement())
+  Name     String
+  Description     String
+  image     String
+  rating   rating[]
+  poll     poll[]
+  review   review[]
+}
+
+model rating {
+  RatingId Int @id @default(autoincrement())
+  Entity entity @relation(fields: [EntityId], references: [EntityId])
+  EntityId Int 
+  User user_account @relation(fields: [UserId], references: [UserAccountId])
+  UserId Int
+  Rating Int
+}
+
+model poll {
+  PollId Int @id @default(autoincrement()) 
+  Entity entity @relation(fields: [EntityId], references: [EntityId])
+  EntityId Int 
+  UserId String
+}
+
+model review {
+  ReviewId Int @id @default(autoincrement())
+  Entity entity @relation(fields: [EntityId], references: [EntityId])
+  EntityId Int 
+  User user_account @relation(fields: [UserId], references: [UserAccountId])
+  UserId Int
+  Review String
+
+}
+
+model user_account {
+  UserAccountId Int @id @default(autoincrement())
+  UserName      String @unique
+  Password      String
+  EmailAddress  String @unique @map("email_address")
+  Role          Role  @default(USER)
+  rating   rating[]
+  review   review[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
