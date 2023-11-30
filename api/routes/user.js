@@ -62,6 +62,7 @@ router.get("/", (req, res) => {
 });
 
 router.post("/login", (req, res, next) => {
+  console.log(req.body);
   passport.authenticate("local", function (err, user, info) {
     if (err) {
       return res.status(500).json({ message: "Failed to authenticate" });

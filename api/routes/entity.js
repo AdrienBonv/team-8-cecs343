@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { PrismaClient } = require("@prisma/client");
-const { use } = require("passport");
 
 // call prisma client
 const prisma = new PrismaClient();
@@ -34,38 +33,43 @@ router.post("/create", (req, res) => {
     if (req.user.Role !== "ADMIN") {
       res.status(401).json({ message: "Unauthorized" });
     } else {
-      // if the user is an admin
-      // create an entity
-      prisma.entity
-        .create({
-          data: {
-            Name: req.body.name,
-            Description: req.body.description,
-            image: req.body.image,
-          },
-        })
-        .then((entity) => {
-          // response status 200 and return message
-          res.status(200).json({
-            message: "Entity created",
-            entity: {
-              EntityId: entity.EntityId,
-              name: entity.Name,
-              description: entity.EntityDescription,
-              image: entity.image,
+      // verify if the image is in base64
+      if (req.body.image.startsWith("data:image")) {
+        // if the user is an admin
+        // create an entity
+        prisma.entity
+          .create({
+            data: {
+              Name: req.body.name,
+              Description: req.body.description,
+              image: req.body.image,
             },
+          })
+          .then((entity) => {
+            // response status 200 and return message
+            res.status(200).json({
+              message: "Entity created",
+              entity: {
+                EntityId: entity.EntityId,
+                name: entity.Name,
+                description: entity.EntityDescription,
+                image: entity.image,
+              },
+            });
+          })
+          .catch((err) => {
+            // response status 500 and return message
+            res
+              .status(500)
+              .json({ message: "Internal Server Error", err: err });
           });
-        })
-        .catch((err) => {
-          // response status 500 and return message
-          res.status(500).json({ message: "Internal Server Error", err: err });
-        });
+      }
     }
   }
 });
 
 // get an entity by id
-router.get("/:id", (req, res) => {
+router.get("/entity/:id", (req, res) => {
   // get id from url
   const id = req.params.id;
 
@@ -83,7 +87,7 @@ router.get("/:id", (req, res) => {
 });
 
 // update an entity by id
-router.put("/:id", (req, res) => {
+router.put("/entity/:id", (req, res) => {
   // get id from url
   const id = req.params.id;
 
@@ -122,7 +126,7 @@ router.put("/:id", (req, res) => {
 });
 
 // delete an entity by id
-router.delete("/:id", (req, res) => {
+router.delete("/entity/:id", (req, res) => {
   // get id from url
   const id = req.params.id;
 
@@ -153,6 +157,35 @@ router.delete("/:id", (req, res) => {
         });
     }
   }
+});
+
+// top rated entities
+router.get("/toprated", (req, res) => {
+  // find all entities in the database
+  prisma.entity
+    .findMany()
+    .then((entities) => {
+      // response status 200 and return all entities
+      /* 
+            http code
+            status 200: OK
+            status 400: Bad Request
+            status 401: Unauthorized
+            status 404: Not Found
+            status 500: Internal Server Error
+        */
+      // sort entities by rating
+      entities.sort((a, b) => {
+        return b.Rating - a.Rating;
+      });
+      console.log(entities);
+      // return top 5 entities
+      res.status(200).json({ entities: entities.slice(0, 6) });
+    })
+    .catch((err) => {
+      // response status 500 and return message
+      res.status(500).json({ message: "Internal Server Error", err: err });
+    });
 });
 
 module.exports = router;
