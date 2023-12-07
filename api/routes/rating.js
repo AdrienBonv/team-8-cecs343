@@ -24,32 +24,67 @@ router.get("/", (req, res) => {
 // create rating
 router.post("/create", (req, res) => {
   // if the user is logged in
+  console.log(req.body);
+  console.log(req.user);
   if (!req.user) {
     // response status 401 and return message
     res.status(401).json({ message: "Unauthorized" });
   } else {
-    prisma.rating
-      .create({
-        data: {
-          EntityId: req.body.EntityId,
-          UserId: req.user.UserAccountId,
-          Rating: req.body.Rating,
-        },
-      })
-      .then((rating) => {
-        res.status(200).json({
-          message: "Rating created",
-          rating: {
-            RatingId: rating.RatingId,
-            rating: rating.Rating,
-            EntityId: rating.EntityId,
-            UserId: rating.UserId,
+    if (req.body.RatingId > 0) {
+      console.log("update");
+
+      prisma.rating
+        .update({
+          where: {
+            RatingId: req.body.RatingId,
           },
+          data: {
+            Rating: req.body.Rating,
+          },
+        })
+        .then((rating) => {
+          res.status(200).json({
+            message: "Rating updated",
+            rating: {
+              RatingId: rating.RatingId,
+              rating: rating.Rating,
+              EntityId: rating.EntityId,
+              UserId: rating.UserId,
+            },
+          });
+        })
+        .catch((err) => {
+          // response status 500 and return message
+          res.status(500).json({ message: "Internal Server Error", err: err });
         });
-      })
-      .catch((err) => {
-        res.status(500).json({ message: "Internal Server Error", err: err });
-      });
+    } else {
+      console.log("create");
+
+      prisma.rating
+        .create({
+          data: {
+            Rating: req.body.Rating,
+            EntityId: req.body.EntityId,
+            UserId: req.user.UserAccountId,
+          },
+        })
+        .then((rating) => {
+          // response status 200 and return message
+          res.status(200).json({
+            message: "Rating created",
+            rating: {
+              RatingId: rating.RatingId,
+              rating: rating.Rating,
+              EntityId: rating.EntityId,
+              UserId: rating.UserId,
+            },
+          });
+        })
+        .catch((err) => {
+          // response status 500 and return message
+          res.status(500).json({ message: "Internal Server Error", err: err });
+        });
+    }
   }
 });
 
@@ -120,33 +155,43 @@ router.get("/entity/:id", (req, res) => {
 
 // find rating by user id
 router.get("/user/:id", (req, res) => {
+  const id = req.params.id;
+  let rate = {};
+
   if (!req.user) {
     // response status 401 and return message
+
+    console.log("Unauthorized 1");
     res.status(401).json({ message: "Unauthorized" });
   } else {
     // if the user is not an admin or the user id does not match the user id in the url
-    if (
-      req.user.Role !== "ADMIN" ||
-      req.user.UserAccountId !== parseInt(req.params.id)
-    ) {
-      // response status 401 and return message
-      res.status(401).json({ message: "Unauthorized" });
-    } else {
-      prisma.rating
-        .findMany({
-          where: {
-            UserId: parseInt(req.params.id),
-          },
-        })
-        .then((ratings) => {
-          // response status 200 and return ratings
-          res.status(200).json({ ratings: ratings });
-        })
-        .catch((err) => {
-          // response status 500 and return message
-          res.status(500).json({ message: "Internal Server Error", err: err });
+    prisma.rating
+      .findMany({
+        where: {
+          EntityId: parseInt(id),
+        },
+      })
+      .then((ratings) => {
+        console.log(ratings);
+
+        ratings.forEach((rating) => {
+          if (rating.UserId === req.user.UserAccountId) {
+            console.log("Authorized");
+            rate = rating;
+          }
         });
-    }
+
+        if (rate) {
+          // response status 200 and return ratings
+          res.status(200).json({ ratings: rate });
+        } else {
+          res.status(404).json({ message: "Not found" });
+        }
+      })
+      .catch((err) => {
+        // response status 500 and return message
+        res.status(500).json({ message: "Internal Server Error", err: err });
+      });
   }
 });
 

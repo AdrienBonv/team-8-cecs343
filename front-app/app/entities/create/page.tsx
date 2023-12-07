@@ -1,21 +1,49 @@
+"use client";
 import Image from "next/image";
+import { useState } from "react";
 
 export default function CreateEntity() {
-  async function handleSubmit(formData: FormData) {
-    "use server";
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [base64Image, setBase64Image] = useState("");
 
-    // convert FormData to JSON string
-    const formDataJSON = JSON.stringify(Object.fromEntries(formData));
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
 
-    const response = await fetch("http://localhost:3000/api/entities/create", {
-      method: "POST",
-      body: formDataJSON,
+    console.log(name, description, base64Image);
 
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-  }
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/entities/create",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          cache: "no-cache",
+          body: JSON.stringify({
+            name: name,
+            description: description,
+            image: base64Image,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(response.statusText);
+        alert("Entity not created");
+      }
+      const data = await response.json();
+
+      console.log(data);
+
+      if (response.ok) {
+        alert("Entity created");
+      }
+    } catch (error) {
+      console.error(error);
+      alert("Entity not created");
+    }
+  };
 
   return (
     <main className="bg-gray-50 dark:bg-gray-900 h-full p-8">
@@ -27,7 +55,7 @@ export default function CreateEntity() {
         </div>
         {/* column space between */}
         <div className="flex flex-row justify-center">
-          <form className="w-full max-w-lg" action={handleSubmit}>
+          <form className="w-full max-w-lg" onSubmit={handleSubmit}>
             <div className="flex flex-wrap -mx-3 mb-6">
               <div className="w-full px-3">
                 <label
@@ -40,6 +68,8 @@ export default function CreateEntity() {
                   className="appearance-none block w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
                   id="grid-name"
                   type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
                   placeholder="Name of the entity"
                 />
                 <p className="text-gray-600 dark:text-gray-400 text-xs italic">
@@ -58,6 +88,8 @@ export default function CreateEntity() {
                 <textarea
                   className="appearance-none block w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
                   id="grid-description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
                   placeholder="Write a description of the entity"
                 />
                 <p className="text-gray-600 dark:text-gray-400 text-xs italic">
@@ -77,6 +109,20 @@ export default function CreateEntity() {
                   className="appearance-none block w-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white"
                   id="grid-image"
                   type="file"
+                  onChange={(event) => {
+                    const input = event.target;
+
+                    if (input.files && input.files[0]) {
+                      const reader = new FileReader();
+
+                      reader.onload = (e: any) => {
+                        const base64String = e.target.result;
+                        setBase64Image(base64String);
+                      };
+
+                      reader.readAsDataURL(input.files[0]);
+                    }
+                  }}
                   accept="image/*"
                 />
                 <p className="text-gray-600 dark:text-gray-400 text-xs italic">
