@@ -7,22 +7,6 @@ var LocalStrategy = require("passport-local").Strategy;
 
 const prisma = new PrismaClient();
 
-passport.serializeUser(function (user, done) {
-  done(null, user.UserAccountId);
-});
-
-passport.deserializeUser(async function (userId, done) {
-  try {
-    const user = await prisma.user_account.findUnique({
-      where: { UserAccountId: userId },
-    });
-
-    done(null, user);
-  } catch (error) {
-    done(error);
-  }
-});
-
 passport.use(
   new LocalStrategy(function (username, password, done) {
     prisma.user_account
@@ -62,7 +46,6 @@ router.get("/", (req, res) => {
 });
 
 router.post("/login", (req, res, next) => {
-  console.log(req.body);
   passport.authenticate("local", function (err, user, info) {
     if (err) {
       return res.status(500).json({ message: "Failed to authenticate" });

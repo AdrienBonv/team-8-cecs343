@@ -10,7 +10,7 @@ router.get("/", (req, res) => {
   // find all entities in the database
   prisma.entity.findMany().then((entities) => {
     // response status 200 and return all entities
-    /* 
+    /*
             http code
             status 200: OK
             status 400: Bad Request
@@ -24,6 +24,8 @@ router.get("/", (req, res) => {
 
 // create an entity
 router.post("/create", (req, res) => {
+  console.log(req.body);
+  console.log(req.user);
   //   if the user is logged in
   if (!req.user) {
     // response status 401 and return message
@@ -34,36 +36,34 @@ router.post("/create", (req, res) => {
       res.status(401).json({ message: "Unauthorized" });
     } else {
       // verify if the image is in base64
-      if (req.body.image.startsWith("data:image")) {
-        // if the user is an admin
-        // create an entity
-        prisma.entity
-          .create({
-            data: {
-              Name: req.body.name,
-              Description: req.body.description,
-              image: req.body.image,
+      // if (req.body.image.startsWith("data:image")) {
+      // if the user is an admin
+      // create an entity
+      prisma.entity
+        .create({
+          data: {
+            Name: req.body.name,
+            Description: req.body.description,
+            image: req.body.image,
+          },
+        })
+        .then((entity) => {
+          // response status 200 and return message
+          res.status(200).json({
+            message: "Entity created",
+            entity: {
+              EntityId: entity.EntityId,
+              name: entity.Name,
+              description: entity.EntityDescription,
+              image: entity.image,
             },
-          })
-          .then((entity) => {
-            // response status 200 and return message
-            res.status(200).json({
-              message: "Entity created",
-              entity: {
-                EntityId: entity.EntityId,
-                name: entity.Name,
-                description: entity.EntityDescription,
-                image: entity.image,
-              },
-            });
-          })
-          .catch((err) => {
-            // response status 500 and return message
-            res
-              .status(500)
-              .json({ message: "Internal Server Error", err: err });
           });
-      }
+        })
+        .catch((err) => {
+          // response status 500 and return message
+          res.status(500).json({ message: "Internal Server Error", err: err });
+        });
+      // }
     }
   }
 });
@@ -166,7 +166,7 @@ router.get("/toprated", (req, res) => {
     .findMany()
     .then((entities) => {
       // response status 200 and return all entities
-      /* 
+      /*
             http code
             status 200: OK
             status 400: Bad Request

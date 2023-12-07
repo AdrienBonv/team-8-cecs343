@@ -1,35 +1,43 @@
+"use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "../../public/CSUlB2.png";
-import { redirect } from "next/navigation";
+import { useState } from "react";
 
 export default function Login() {
-  async function handleSubmit(formData: FormData) {
-    "use server";
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
 
-    // convert FormData to JSON string
-    const formDataJSON = JSON.stringify(Object.fromEntries(formData));
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
 
-    // send JSON string to server
-    const response = await fetch("http://localhost:3000/api/users/login", {
-      method: "POST",
-      body: formDataJSON,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    console.log(username, password);
+    try {
+      const response = await fetch("http://localhost:3000/api/users/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        cache: "no-cache",
+        body: JSON.stringify({
+          username: username,
+          password: password,
+        }),
+      });
 
-    // get response from server
-    const data = await response.json();
+      if (!response.ok) {
+        throw new Error(response.statusText);
+      }
 
-    // if response is ok, redirect to home page
-    if (response.ok) {
-      redirect("/");
-    } else {
-      // if response is not ok, log error
-      console.error(data);
+      const data = await response.json();
+
+      if (response.ok) {
+        window.location.href = "/";
+      }
+    } catch (error) {
+      console.error(error);
     }
-  }
+  };
 
   return (
     <div className="bg-gray-50 dark:bg-gray-900">
@@ -46,7 +54,7 @@ export default function Login() {
             <h1 className="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl dark:text-white">
               Sign in to your account
             </h1>
-            <form className="space-y-4 md:space-y-6" action={handleSubmit}>
+            <form className="space-y-4 md:space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label
                   htmlFor="username"
@@ -58,6 +66,8 @@ export default function Login() {
                   type="username"
                   name="username"
                   id="username"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   placeholder="username"
                 />
@@ -73,35 +83,11 @@ export default function Login() {
                   type="password"
                   name="password"
                   id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                 />
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-start">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="remember"
-                      aria-describedby="remember"
-                      type="checkbox"
-                      className="w-4 h-4 border border-gray-300 rounded bg-gray-50 focus:ring-3 focus:ring-primary-300 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-primary-600 dark:ring-offset-gray-800"
-                    />
-                  </div>
-                  <div className="ml-3 text-sm">
-                    <label
-                      htmlFor="remember"
-                      className="text-gray-500 dark:text-gray-300"
-                    >
-                      Remember me
-                    </label>
-                  </div>
-                </div>
-                <Link
-                  href="#"
-                  className="text-sm font-medium text-primary-600 hover:underline dark:text-primary-500"
-                >
-                  Forgot password?
-                </Link>
               </div>
               <button
                 type="submit"
@@ -112,7 +98,7 @@ export default function Login() {
               <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                 Don’t have an account yet?{" "}
                 <a
-                  href="#"
+                  href="/register"
                   className="font-medium text-primary-600 hover:underline dark:text-primary-500"
                 >
                   Sign up
